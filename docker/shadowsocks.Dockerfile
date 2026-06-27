@@ -12,4 +12,4 @@ RUN cd /tmp && \
 
 USER nobody
 
-CMD [ "ssserver", "-c", "/etc/shadowsocks-rust/config.json" ]
+CMD [ "ssserver", "--log-without-time", "-c", "/etc/shadowsocks-rust/config.json" ]
