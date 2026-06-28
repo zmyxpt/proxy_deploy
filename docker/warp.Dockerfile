@@ -1,5 +1,7 @@
 FROM debian:trixie-slim
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 RUN set -evx && \
     apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl gpg iproute2 lsb-release procps && \
