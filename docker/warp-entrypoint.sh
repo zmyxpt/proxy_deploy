@@ -2,6 +2,7 @@
 set -o errexit -o nounset -o pipefail
 
 warp-svc &
+WARP_SVC_PID=$!
 
 until warp-cli --accept-tos status >/dev/null 2>&1
 do
@@ -19,6 +20,13 @@ warp-cli --accept-tos connect
 
 while true
 do
+    if ! kill -0 "$WARP_SVC_PID" 2>/dev/null
+    then
+        echo "warp-svc exited; restarting container"
+        wait "$WARP_SVC_PID" || true
+        exit 1
+    fi
+
     warp-cli --accept-tos status || true
-    sleep 300
+    sleep 60
 done
