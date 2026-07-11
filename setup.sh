@@ -159,7 +159,7 @@ auto_update_cron()
     systemctl restart cron.service
 
     (
-        crontab -l 2>/dev/null | grep -v 'ss_deploy-main/auto-update.sh'
+        crontab -l 2>/dev/null | grep -v 'ss_deploy-main/auto-update.sh' || true
         echo '0 19 * * 1 bash "$HOME"/ss_deploy-main/auto-update.sh >> "$HOME"/ss_deploy-main/auto-update.log 2>&1'
     ) | crontab -
 }
