@@ -31,6 +31,8 @@ services:
       context: docker
       dockerfile: warp.Dockerfile
     container_name: warp
+    mem_reservation: 128m
+    mem_limit: 320m
     cap_add:
       - NET_ADMIN
     devices:
