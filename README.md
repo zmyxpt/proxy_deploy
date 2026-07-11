@@ -7,6 +7,8 @@ Deploy two Shadowsocks services behind one HTTPS endpoint:
 
 Both client profiles connect to the same domain and port `443`. Caddy separates them by WebSocket path and forwards traffic to the matching Shadowsocks service.
 
+Enable bbr if supported.
+
 # Components
 
  - [Caddy v2](https://caddyserver.com): TLS certificate and WebSocket reverse proxy

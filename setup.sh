@@ -38,6 +38,24 @@ check_os_version()
     fi
 }
 
+enable_bbr()
+{
+    modprobe tcp_bbr 2>/dev/null || true
+
+    if ! sysctl -n net.ipv4.tcp_available_congestion_control 2>/dev/null | grep -qw bbr
+    then
+        echo "BBR is not supported by the current kernel, skipping."
+        return 0
+    fi
+
+    cat > /etc/sysctl.d/99-bbr.conf <<'EOF'
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+EOF
+
+    sysctl -p /etc/sysctl.d/99-bbr.conf
+}
+
 install_packages()
 {
     apt-get update
@@ -186,6 +204,7 @@ main()
 
     check_if_running_as_root
     check_os_version
+    enable_bbr
     install_packages
 
     cd "$HOME"
