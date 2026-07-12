@@ -1,6 +1,6 @@
 # ss_deploy
 
-Deploy two Shadowsocks services behind one HTTPS endpoint:
+Deploy two Shadowsocks-over-WebSocket services behind one HTTPS endpoint:
 
  - direct profile: exits from the VPS network directly
  - WARP profile: exits through Cloudflare WARP
@@ -36,7 +36,7 @@ The script asks for:
  - email for TLS certificate notifications
  - direct Shadowsocks WebSocket path
  - WARP Shadowsocks WebSocket path
- - shared Shadowsocks password
+ - Shadowsocks password
 
 Example values:
 
