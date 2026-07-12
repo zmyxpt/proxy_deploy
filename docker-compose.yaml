@@ -1,0 +1,44 @@
+services:
+
+  caddy:
+    image: caddy
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Volumes/caddyconf:/etc/caddy
+      - ./Volumes/caddydata:/data
+    restart: always
+    networks:
+      - caddy-gost
+
+  gost:
+    image: gogost/gost
+    container_name: gost
+    entrypoint: ["gost"]
+    command: ["-C", "/etc/gost/gost.yaml"]
+    volumes:
+      - ./Volumes/gost:/etc/gost
+    restart: always
+    networks:
+      - caddy-gost
+    depends_on:
+      - warp
+
+  warp:
+    image: cloudflare-warp
+    build:
+      context: docker
+      dockerfile: warp.Dockerfile
+    container_name: warp
+    mem_reservation: 128m
+    mem_limit: 320m
+    volumes:
+      - ./Volumes/warp:/var/lib/cloudflare-warp
+    restart: always
+    networks:
+      - caddy-gost
+
+networks:
+  caddy-gost:
