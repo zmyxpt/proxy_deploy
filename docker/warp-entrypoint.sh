@@ -27,6 +27,10 @@ do
         exit 1
     fi
 
-    warp-cli --accept-tos status || true
-    sleep 60
+    if ! warp-cli --accept-tos status | grep -q 'Connected'
+    then
+        echo "WARP disconnected; reconnecting"
+        warp-cli --accept-tos connect || true
+    fi
+    sleep 30
 done
