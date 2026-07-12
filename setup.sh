@@ -85,13 +85,12 @@ configure()
     mkdir -p "$CADDY_DATA_DIR"
     mkdir -p "$WARP_DIR"
 
-    local domain email ss_direct_path ss_direct_password ss_warp_path ss_warp_password
+    local domain email ss_direct_path ss_warp_path ss_password
     read -r -p $'Set your domain, e.g. \033[1mwww.example.com\033[0m\n' domain
     read -r -p $'Set your email to receive TLS certificate notice, e.g. \033[1mabc@gmail.com\033[0m\n' email
     read -r -p $'Set your shadowsocks direct path, e.g. \033[1m/direct\033[0m\n' ss_direct_path
-    read -r -p $'Set your shadowsocks direct password, e.g. \033[1mpass1234\033[0m\n' ss_direct_password
     read -r -p $'Set your shadowsocks WARP path, e.g. \033[1m/warp\033[0m\n' ss_warp_path
-    read -r -p $'Set your shadowsocks WARP password, e.g. \033[1mpass5678\033[0m\n' ss_warp_password
+    read -r -p $'Set your shadowsocks password, e.g. \033[1mpass1234\033[0m\n' ss_password
 
     local finish=false
     until "$finish"
@@ -100,16 +99,14 @@ configure()
         echo -e "Domain: \033[32m${domain}\033[0m"
         echo -e "Email: \033[32m${email}\033[0m"
         echo -e "Direct path: \033[32m${ss_direct_path}\033[0m"
-        echo -e "Direct password: \033[32m${ss_direct_password}\033[0m"
         echo -e "WARP path: \033[32m${ss_warp_path}\033[0m"
-        echo -e "WARP password: \033[32m${ss_warp_password}\033[0m"
+        echo -e "Shadowsocks password: \033[32m${ss_password}\033[0m"
         echo $'===============================\nYou can:'
         echo "1. Reset domain"
         echo "2. Reset email"
         echo "3. Reset shadowsocks direct path"
-        echo "4. Reset shadowsocks direct password"
-        echo "5. Reset shadowsocks WARP path"
-        echo "6. Reset shadowsocks WARP password"
+        echo "4. Reset shadowsocks WARP path"
+        echo "5. Reset shadowsocks password"
         echo "0. Finish it, start up"
         read -r -p $'Choose an option by number:\n' choice
         case "$choice" in
@@ -123,13 +120,10 @@ configure()
             read -r -p $'Set your shadowsocks direct path, e.g. \033[1m/direct\033[0m\n' ss_direct_path
             ;;
         4)
-            read -r -p $'Set your shadowsocks direct password, e.g. \033[1mpass1234\033[0m\n' ss_direct_password
-            ;;
-        5)
             read -r -p $'Set your shadowsocks WARP path, e.g. \033[1m/warp\033[0m\n' ss_warp_path
             ;;
-        6)
-            read -r -p $'Set your shadowsocks WARP password, e.g. \033[1mpass5678\033[0m\n' ss_warp_password
+        5)
+            read -r -p $'Set your shadowsocks password, e.g. \033[1mpass1234\033[0m\n' ss_password
             ;;
         0)
             finish=true
@@ -147,16 +141,15 @@ configure()
     export DOMAIN="$domain"
     export EMAIL="$email"
     export SS_DIRECT_PATH="${ss_direct_path:1}"
-    export SS_DIRECT_PASSWORD="$ss_direct_password"
     export SS_WARP_PATH="${ss_warp_path:1}"
-    export SS_WARP_PASSWORD="$ss_warp_password"
+    export SS_PASSWORD="$ss_password"
 
-    perl -0pi -e 's/domain/$ENV{DOMAIN}/g' "$CADDY_CONF_DIR/Caddyfile"
-    perl -0pi -e 's/email/$ENV{EMAIL}/g' "$CADDY_CONF_DIR/Caddyfile"
-    perl -0pi -e 's/ss_direct_path/$ENV{SS_DIRECT_PATH}/g' "$CADDY_CONF_DIR/Caddyfile"
-    perl -0pi -e 's/ss_direct_password/$ENV{SS_DIRECT_PASSWORD}/g' "$SS_DIRECT_DIR/config.json"
-    perl -0pi -e 's/ss_warp_path/$ENV{SS_WARP_PATH}/g' "$CADDY_CONF_DIR/Caddyfile"
-    perl -0pi -e 's/ss_warp_password/$ENV{SS_WARP_PASSWORD}/g' "$SS_WARP_DIR/config.json"
+    perl -0pi -e 's/__DOMAIN__/$ENV{DOMAIN}/g' "$CADDY_CONF_DIR/Caddyfile"
+    perl -0pi -e 's/__EMAIL__/$ENV{EMAIL}/g' "$CADDY_CONF_DIR/Caddyfile"
+    perl -0pi -e 's/__SS_DIRECT_PATH__/$ENV{SS_DIRECT_PATH}/g' "$CADDY_CONF_DIR/Caddyfile"
+    perl -0pi -e 's/__SS_WARP_PATH__/$ENV{SS_WARP_PATH}/g' "$CADDY_CONF_DIR/Caddyfile"
+    perl -0pi -e 's/__SS_PASSWORD__/$ENV{SS_PASSWORD}/g' "$SS_DIRECT_DIR/config.json"
+    perl -0pi -e 's/__SS_PASSWORD__/$ENV{SS_PASSWORD}/g' "$SS_WARP_DIR/config.json"
 }
 
 run_server()
@@ -189,7 +182,7 @@ client_configure_help()
     echo -e "\n  On client side, install \033[33mshadowsocks\033[0m and \033[33mv2ray plugin\033[0m, then edit config json:"
     echo -e "\n   \"server\" should be \033[3;33m\"your_domain\"\033[0m"
     echo -e "   \"server_port\" should be \033[33m443\033[0m"
-    echo -e "   \"password\" should be \033[3;33m\"your_ss_direct_or_ss_warp_password\"\033[0m"
+    echo -e "   \"password\" should be \033[3;33m\"your_ss_password\"\033[0m"
     echo -e "   \"method\" should be \033[33m\"aes-256-gcm\"\033[0m"
     echo -e "   \"plugin\" should be the path you run v2ray plugin from within shadowsocks workdir"
     echo -e "   Direct \"plugin_opts\" should be \033[33m\"tls;host=\033[3myour_domain\033[0;33m;path=\033[3myour_ss_direct_path\033[33m\"\033[0m"

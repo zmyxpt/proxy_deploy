@@ -35,18 +35,16 @@ The script asks for:
  - domain
  - email for TLS certificate notifications
  - direct Shadowsocks WebSocket path
- - direct Shadowsocks password
  - WARP Shadowsocks WebSocket path
- - WARP Shadowsocks password
+ - shared Shadowsocks password
 
 Example values:
 
 ```text
 domain: www.example.com
 direct path: /direct
-direct password: pass-direct
 WARP path: /warp
-WARP password: pass-warp
+password: pass1234
 ```
 
 # Client Profiles
@@ -65,14 +63,14 @@ plugin: v2ray-plugin
 Direct profile:
 
 ```text
-password: pass-direct
+password: pass1234
 plugin_opts: tls;host=www.example.com;path=/direct
 ```
 
 WARP profile:
 
 ```text
-password: pass-warp
+password: pass1234
 plugin_opts: tls;host=www.example.com;path=/warp
 ```
 

@@ -1,6 +1,6 @@
-domain
+__DOMAIN__
 {
-    tls email {
+    tls __EMAIL__ {
         protocols tls1.3
     }
     log {
@@ -15,11 +15,11 @@ domain
     encode
 
     route * {
-        route /ss_direct_path {
+        route /__SS_DIRECT_PATH__ {
             rewrite * /
             reverse_proxy shadowsocks-direct:9000
         }
-        route /ss_warp_path {
+        route /__SS_WARP_PATH__ {
             rewrite * /
             reverse_proxy warp:9001
         }
