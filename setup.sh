@@ -120,9 +120,11 @@ configure()
         echo -e "Email: \033[32m${email}\033[0m"
         echo -e "Shadowsocks direct: \033[32m/${ss_direct_path}\033[0m -> 9000"
         echo -e "Shadowsocks WARP: \033[32m/${ss_warp_path}\033[0m -> 9001"
+        echo -e "Shadowsocks password: \033[32m${ss_password}\033[0m"
         echo -e "GOST direct: \033[32m/${gost_direct_path}\033[0m -> 9002"
         echo -e "GOST WARP: \033[32m/${gost_warp_path}\033[0m -> 9003"
         echo -e "GOST username: \033[32m${gost_username}\033[0m"
+        echo -e "GOST password: \033[32m${gost_password}\033[0m"
         read -r -p $'Continue? [y/N]\n' confirm
         [[ "$confirm" =~ ^[Yy]$ ]] && break
     done
