@@ -9,4 +9,4 @@ services:
     listener:
       type: ws
       metadata:
-        ws.path: "/"
+        ws.path: "/ws"

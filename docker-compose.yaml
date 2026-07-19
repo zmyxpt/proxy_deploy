@@ -1,4 +1,3 @@
-# setup.sh refreshes this file from templates/docker-compose.yaml.
 services:
   caddy:
     image: caddy
@@ -9,18 +8,6 @@ services:
     volumes:
       - ./Volumes/caddyconf:/etc/caddy
       - ./Volumes/caddydata:/data
-    restart: always
-    networks:
-      - proxy
-
-  shadowsocks-direct:
-    image: shadowsocks
-    build:
-      context: docker
-      dockerfile: shadowsocks.Dockerfile
-    container_name: shadowsocks-direct
-    volumes:
-      - ./Volumes/shadowsocks-direct:/etc/shadowsocks-rust
     restart: always
     networks:
       - proxy
@@ -39,6 +26,18 @@ services:
       - /dev/net/tun:/dev/net/tun
     volumes:
       - ./Volumes/warp:/var/lib/cloudflare-warp
+    restart: always
+    networks:
+      - proxy
+
+  shadowsocks-direct:
+    image: shadowsocks
+    build:
+      context: docker
+      dockerfile: shadowsocks.Dockerfile
+    container_name: shadowsocks-direct
+    volumes:
+      - ./Volumes/shadowsocks-direct:/etc/shadowsocks-rust
     restart: always
     networks:
       - proxy

@@ -16,27 +16,40 @@ __DOMAIN__
 
     route * {
         route /__SS_DIRECT_PATH__ {
-            rewrite * /
+            rewrite * /ws
             reverse_proxy shadowsocks-direct:9000
         }
         route /__SS_WARP_PATH__ {
-            rewrite * /
+            rewrite * /ws
             reverse_proxy warp:9001
         }
         route /__GOST_DIRECT_PATH__ {
-            rewrite * /
+            rewrite * /ws
             reverse_proxy gost-direct:9002
         }
         route /__GOST_WARP_PATH__ {
-            rewrite * /
+            rewrite * /ws
             reverse_proxy warp:9003
         }
         route * {
             header Content-Type text/html
             respond <<HTML
                 <html>
-                    <head><title>Welcome</title></head>
-                    <body>Proxy services are running.</body>
+                    <head>
+                        <title>Welcome</title>
+                        <style>
+                            body {
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                height: 100vh;
+                                margin: 0;
+                                font-size: 60px;
+                                text-align: center;
+                            }
+                        </style>
+                    </head>
+                    <body>May the Force be<br>with you</body>
                 </html>
             HTML 200
         }

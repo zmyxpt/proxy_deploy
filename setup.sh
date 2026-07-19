@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -o errexit -o nounset -o pipefail
+set -o errexit -o nounset -o pipefail #-o xtrace
 
 PROJECT_NAME="proxy_deploy"
 REPO_ZIP_URL="https://github.com/zmyxpt/${PROJECT_NAME}/archive/refs/heads/main.zip"
@@ -8,6 +8,7 @@ VOLUME_DIR="Volumes"
 TEMPLATE_DIR="templates"
 CADDY_CONF_DIR="${VOLUME_DIR}/caddyconf"
 CADDY_DATA_DIR="${VOLUME_DIR}/caddydata"
+COMPOSE_FILE="docker-compose.yaml"
 
 check_if_running_as_root()
 {
@@ -131,7 +132,6 @@ configure()
     export GOST_DIRECT_PATH="$gost_direct_path" GOST_WARP_PATH="$gost_warp_path"
     export SS_PASSWORD="$ss_password" GOST_USERNAME="$gost_username" GOST_PASSWORD="$gost_password"
 
-    cp "$TEMPLATE_DIR/docker-compose.yaml" docker-compose.yaml
     cp "$TEMPLATE_DIR/Caddyfile" "$CADDY_CONF_DIR/Caddyfile"
     cp "$TEMPLATE_DIR/shadowsocks-direct.json" "${VOLUME_DIR}/shadowsocks-direct/config.json"
     cp "$TEMPLATE_DIR/shadowsocks-warp.json" "${VOLUME_DIR}/shadowsocks-warp/config.json"
@@ -145,10 +145,10 @@ configure()
 
 run_server()
 {
-    docker compose down --remove-orphans
-    docker compose pull --ignore-buildable
-    docker compose build --no-cache --pull
-    docker compose up -d
+    docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" down --remove-orphans
+    docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" pull --ignore-buildable
+    docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" build --no-cache --pull
+    docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" up -d
 }
 
 auto_update_cron()
@@ -157,7 +157,7 @@ auto_update_cron()
     systemctl restart cron.service
 
     (
-        crontab -l 2>/dev/null | grep -Ev '(ss_deploy|gost_deploy|proxy_deploy)-main/auto-update.sh' || true
+        crontab -l 2>/dev/null | grep -Ev 'proxy_deploy-main/auto-update.sh' || true
         echo '0 19 * * 1 bash "$HOME"/proxy_deploy-main/auto-update.sh >> "$HOME"/proxy_deploy-main/auto-update.log 2>&1'
     ) | crontab -
 }
@@ -175,6 +175,7 @@ client_configure_help()
 main()
 {
     local old_PWD=$PWD
+
     check_if_running_as_root
     check_os_version
     enable_bbr
@@ -182,11 +183,13 @@ main()
 
     cd "$HOME"
     download_res
+
     cd "$PROJECT_DIR"
     configure
     run_server
     auto_update_cron
     client_configure_help
+
     cd "$old_PWD"
 }
 

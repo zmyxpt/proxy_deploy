@@ -8,5 +8,5 @@
     "nameserver":"1.1.1.1",
     "mode":"tcp_only",
     "plugin":"v2ray-plugin",
-    "plugin_opts":"server;path=/"
+    "plugin_opts":"server;path=/ws"
 }

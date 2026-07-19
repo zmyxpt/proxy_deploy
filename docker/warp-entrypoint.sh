@@ -32,10 +32,12 @@ do
         wait "$WARP_SVC_PID" || true
         exit 1
     fi
+
     if ! warp-cli --accept-tos status | grep -q 'Connected'
     then
         echo "WARP disconnected; reconnecting"
         warp-cli --accept-tos connect || true
     fi
+
     sleep 30
 done

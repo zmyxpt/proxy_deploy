@@ -11,6 +11,8 @@ Deploy Shadowsocks and GOST together behind one Caddy HTTPS endpoint. Each proto
 
 Clients always connect to the public domain on port `443`. The internal ports are only used between Caddy and the proxy containers.
 
+BBR is enabled for better speed.
+
 ## Requirements
 
 - Debian 13 (trixie)
@@ -62,9 +64,9 @@ Create both local tunnels with:
 
 ```bash
 gost \
-    -L auto://127.0.0.1:1080 -F 'socks5+wss://user:password@www.example.com:443?path=/gost-direct' \
+    -L auto://127.0.0.1:1082 -F 'socks5+wss://user:password@www.example.com:443?path=/gost-direct' \
     -- \
-    -L auto://127.0.0.1:1081 -F 'socks5+wss://user:password@www.example.com:443?path=/gost-warp'
+    -L auto://127.0.0.1:1083 -F 'socks5+wss://user:password@www.example.com:443?path=/gost-warp'
 ```
 
 ## Architecture
