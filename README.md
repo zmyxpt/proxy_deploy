@@ -5,7 +5,7 @@ Deploy Shadowsocks and GOST together behind one Caddy HTTPS endpoint. Each proto
 | Service | Internal port | Egress |
 | --- | ---: | --- |
 | Shadowsocks direct | 9000 | VPS |
-| Shadowsocks WARP | 9001 | Cloudflare WARP |
+| Shadowsocks WARP | 9001 | Cloudflare WARP tunnel |
 | GOST direct | 9002 | VPS |
 | GOST WARP | 9003 | Cloudflare WARP tunnel |
 
