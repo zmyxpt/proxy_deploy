@@ -1,6 +1,6 @@
 services:
   - name: direct
-    addr: ":9000"
+    addr: ":9002"
     handler:
       type: socks5
       auth:
@@ -12,7 +12,7 @@ services:
         ws.path: "/"
 
   - name: warp
-    addr: ":9001"
+    addr: ":9003"
     handler:
       type: socks5
       chain: warp-chain
@@ -30,7 +30,7 @@ chains:
       - name: warp-hop
         nodes:
           - name: warp-proxy
-            addr: "warp:40000"
+            addr: "warp-gost:40000"
             connector:
               type: socks5
             dialer:

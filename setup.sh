@@ -8,8 +8,6 @@ VOLUME_DIR="Volumes"
 TEMPLATE_DIR="templates"
 CADDY_CONF_DIR="${VOLUME_DIR}/caddyconf"
 CADDY_DATA_DIR="${VOLUME_DIR}/caddydata"
-WARP_DIR="${VOLUME_DIR}/warp"
-PROXY_TYPE=""
 
 check_if_running_as_root()
 {
@@ -59,7 +57,7 @@ install_packages()
 {
     apt-get update
     apt-get upgrade --with-new-pkgs -y
-    apt-get install -y --no-install-recommends aptitude ca-certificates cron curl docker.io docker-buildx docker-cli docker-compose lsof perl unzip
+    apt-get install -y --no-install-recommends aptitude ca-certificates cron curl docker.io docker-buildx docker-cli docker-compose perl unzip
     aptitude search ~pstandard ~prequired ~pimportant -F%p | xargs apt-get install -y --no-install-recommends
     apt-get autoremove --purge -y
 }
@@ -76,76 +74,72 @@ download_res()
     rm "${PROJECT_NAME}.zip"
 }
 
-select_proxy()
-{
-    while true
-    do
-        echo "Choose the proxy server to deploy:"
-        echo "1. Shadowsocks with v2ray-plugin"
-        echo "2. GOST SOCKS5 over WebSocket"
-        read -r -p $'Choose an option by number:\n' choice
-        case "$choice" in
-        1) PROXY_TYPE="shadowsocks"; return ;;
-        2) PROXY_TYPE="gost"; return ;;
-        *) echo "Invalid option." ;;
-        esac
-    done
-}
-
 configure()
 {
-    mkdir -p "$CADDY_CONF_DIR" "$CADDY_DATA_DIR" "$WARP_DIR"
+    mkdir -p \
+        "$CADDY_CONF_DIR" \
+        "$CADDY_DATA_DIR" \
+        "${VOLUME_DIR}/shadowsocks-direct" \
+        "${VOLUME_DIR}/shadowsocks-warp" \
+        "${VOLUME_DIR}/gost" \
+        "${VOLUME_DIR}/warp-shadowsocks" \
+        "${VOLUME_DIR}/warp-gost"
 
-    local domain email direct_path warp_path password username=""
+    local domain email ss_direct_path ss_warp_path gost_direct_path gost_warp_path
+    local ss_password gost_username gost_password confirm
     while true
     do
         read -r -p $'Set your domain, e.g. \033[1mwww.example.com\033[0m\n' domain
         read -r -p $'Set your email for TLS certificate notices, e.g. \033[1mabc@gmail.com\033[0m\n' email
-        read -r -p $'Set the direct WebSocket path, e.g. \033[1m/direct\033[0m\n' direct_path
-        read -r -p $'Set the WARP WebSocket path, e.g. \033[1m/warp\033[0m\n' warp_path
+        read -r -p $'Set the Shadowsocks direct path, e.g. \033[1m/ss-direct\033[0m\n' ss_direct_path
+        read -r -p $'Set the Shadowsocks WARP path, e.g. \033[1m/ss-warp\033[0m\n' ss_warp_path
+        read -r -p $'Set the Shadowsocks password, e.g. \033[1mpass1234\033[0m\n' ss_password
+        read -r -p $'Set the GOST direct path, e.g. \033[1m/gost-direct\033[0m\n' gost_direct_path
+        read -r -p $'Set the GOST WARP path, e.g. \033[1m/gost-warp\033[0m\n' gost_warp_path
+        read -r -p $'Set the GOST SOCKS5 username, e.g. \033[1muser1234\033[0m\n' gost_username
+        read -r -p $'Set the GOST SOCKS5 password, e.g. \033[1mpass1234\033[0m\n' gost_password
 
-        if [[ "$PROXY_TYPE" == "shadowsocks" ]]
+        ss_direct_path="${ss_direct_path#/}"
+        ss_warp_path="${ss_warp_path#/}"
+        gost_direct_path="${gost_direct_path#/}"
+        gost_warp_path="${gost_warp_path#/}"
+        if [[ -z "$ss_direct_path" || -z "$ss_warp_path" || -z "$gost_direct_path" || -z "$gost_warp_path" ]]
         then
-            read -r -p $'Set the Shadowsocks password, e.g. \033[1mpass1234\033[0m\n' password
-        else
-            read -r -p $'Set the SOCKS5 username, e.g. \033[1muser1234\033[0m\n' username
-            read -r -p $'Set the SOCKS5 password, e.g. \033[1mpass1234\033[0m\n' password
+            echo -e "\033[31mWebSocket paths cannot be empty.\033[0m"
+            continue
+        fi
+        if printf '%s\n' "$ss_direct_path" "$ss_warp_path" "$gost_direct_path" "$gost_warp_path" | sort | uniq -d | grep -q .
+        then
+            echo -e "\033[31mAll four WebSocket paths must be different.\033[0m"
+            continue
         fi
 
         echo $'Here is your setting:\n=============================='
-        echo -e "Proxy: \033[32m${PROXY_TYPE}\033[0m"
         echo -e "Domain: \033[32m${domain}\033[0m"
         echo -e "Email: \033[32m${email}\033[0m"
-        echo -e "Direct path: \033[32m/${direct_path#/}\033[0m"
-        echo -e "WARP path: \033[32m/${warp_path#/}\033[0m"
-        [[ -z "$username" ]] || echo -e "Username: \033[32m${username}\033[0m"
-        echo -e "Password: \033[32m${password}\033[0m"
+        echo -e "Shadowsocks direct: \033[32m/${ss_direct_path}\033[0m -> 9000"
+        echo -e "Shadowsocks WARP: \033[32m/${ss_warp_path}\033[0m -> 9001"
+        echo -e "GOST direct: \033[32m/${gost_direct_path}\033[0m -> 9002"
+        echo -e "GOST WARP: \033[32m/${gost_warp_path}\033[0m -> 9003"
+        echo -e "GOST username: \033[32m${gost_username}\033[0m"
         read -r -p $'Continue? [y/N]\n' confirm
         [[ "$confirm" =~ ^[Yy]$ ]] && break
     done
 
-    direct_path="${direct_path#/}"
-    warp_path="${warp_path#/}"
-    export DOMAIN="$domain" EMAIL="$email" DIRECT_PATH="$direct_path" WARP_PATH="$warp_path"
-    export PROXY_PASSWORD="$password" PROXY_USERNAME="$username"
+    export DOMAIN="$domain" EMAIL="$email"
+    export SS_DIRECT_PATH="$ss_direct_path" SS_WARP_PATH="$ss_warp_path"
+    export GOST_DIRECT_PATH="$gost_direct_path" GOST_WARP_PATH="$gost_warp_path"
+    export SS_PASSWORD="$ss_password" GOST_USERNAME="$gost_username" GOST_PASSWORD="$gost_password"
 
-    cp "$TEMPLATE_DIR/docker-compose.${PROXY_TYPE}.yaml" docker-compose.yaml
-    cp "$TEMPLATE_DIR/Caddyfile.${PROXY_TYPE}" "$CADDY_CONF_DIR/Caddyfile"
-    perl -0pi -e 's/__DOMAIN__/$ENV{DOMAIN}/g; s/__EMAIL__/$ENV{EMAIL}/g; s/__DIRECT_PATH__/$ENV{DIRECT_PATH}/g; s/__WARP_PATH__/$ENV{WARP_PATH}/g' "$CADDY_CONF_DIR/Caddyfile"
+    cp "$TEMPLATE_DIR/docker-compose.yaml" docker-compose.yaml
+    cp "$TEMPLATE_DIR/Caddyfile" "$CADDY_CONF_DIR/Caddyfile"
+    cp "$TEMPLATE_DIR/shadowsocks-direct.json" "${VOLUME_DIR}/shadowsocks-direct/config.json"
+    cp "$TEMPLATE_DIR/shadowsocks-warp.json" "${VOLUME_DIR}/shadowsocks-warp/config.json"
+    cp "$TEMPLATE_DIR/gost.yaml" "${VOLUME_DIR}/gost/gost.yaml"
 
-    if [[ "$PROXY_TYPE" == "shadowsocks" ]]
-    then
-        mkdir -p "${VOLUME_DIR}/shadowsocks-direct" "${VOLUME_DIR}/shadowsocks-warp"
-        cp "$TEMPLATE_DIR/shadowsocks-direct.json" "${VOLUME_DIR}/shadowsocks-direct/config.json"
-        cp "$TEMPLATE_DIR/shadowsocks-warp.json" "${VOLUME_DIR}/shadowsocks-warp/config.json"
-        perl -0pi -e 's/__SS_PASSWORD__/$ENV{PROXY_PASSWORD}/g' "${VOLUME_DIR}/shadowsocks-direct/config.json" "${VOLUME_DIR}/shadowsocks-warp/config.json"
-    else
-        mkdir -p "${VOLUME_DIR}/gost"
-        cp "$TEMPLATE_DIR/gost.yaml" "${VOLUME_DIR}/gost/gost.yaml"
-        perl -0pi -e 's/__SOCKS_USERNAME__/$ENV{PROXY_USERNAME}/g; s/__SOCKS_PASSWORD__/$ENV{PROXY_PASSWORD}/g' "${VOLUME_DIR}/gost/gost.yaml"
-    fi
-
-    printf '%s\n' "$PROXY_TYPE" > "${VOLUME_DIR}/proxy-type"
+    perl -0pi -e 's/__DOMAIN__/$ENV{DOMAIN}/g; s/__EMAIL__/$ENV{EMAIL}/g; s/__SS_DIRECT_PATH__/$ENV{SS_DIRECT_PATH}/g; s/__SS_WARP_PATH__/$ENV{SS_WARP_PATH}/g; s/__GOST_DIRECT_PATH__/$ENV{GOST_DIRECT_PATH}/g; s/__GOST_WARP_PATH__/$ENV{GOST_WARP_PATH}/g' "$CADDY_CONF_DIR/Caddyfile"
+    perl -0pi -e 's/__SS_PASSWORD__/$ENV{SS_PASSWORD}/g' "${VOLUME_DIR}/shadowsocks-direct/config.json" "${VOLUME_DIR}/shadowsocks-warp/config.json"
+    perl -0pi -e 's/__SOCKS_USERNAME__/$ENV{GOST_USERNAME}/g; s/__SOCKS_PASSWORD__/$ENV{GOST_PASSWORD}/g' "${VOLUME_DIR}/gost/gost.yaml"
 }
 
 run_server()
@@ -170,15 +164,10 @@ auto_update_cron()
 client_configure_help()
 {
     echo -e "=================================================="
-    echo -e "\n  Deploy finished: \033[33m${PROXY_TYPE}\033[0m"
-    if [[ "$PROXY_TYPE" == "shadowsocks" ]]
-    then
-        echo -e "\n  Create direct and WARP Shadowsocks profiles using port 443, aes-256-gcm, and v2ray-plugin."
-        echo -e "  Plugin options: tls;host=your_domain;path=/your_path"
-    else
-        echo -e "\n  Example GOST client tunnel:"
-        echo -e "  gost -L auto://127.0.0.1:1080 -F 'socks5+wss://user:password@your_domain:443?path=/your_path'"
-    fi
+    echo -e "\n  Shadowsocks and GOST were deployed together."
+    echo -e "  Shadowsocks listens internally on ports 9000 and 9001."
+    echo -e "  GOST listens internally on ports 9002 and 9003."
+    echo -e "  All clients connect to your domain on HTTPS port 443 using their configured WebSocket path."
     echo -e "\n=================================================="
 }
 
@@ -187,7 +176,6 @@ main()
     local old_PWD=$PWD
     check_if_running_as_root
     check_os_version
-    select_proxy
     enable_bbr
     install_packages
 

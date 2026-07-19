@@ -1,11 +1,15 @@
 # proxy_deploy
 
-Deploy either Shadowsocks or GOST behind a Caddy HTTPS endpoint. Both options provide two WebSocket paths:
+Deploy Shadowsocks and GOST together behind one Caddy HTTPS endpoint. Each protocol provides a direct exit and a Cloudflare WARP exit, selected by WebSocket path.
 
-- direct: traffic exits from the VPS network
-- WARP: traffic exits through Cloudflare WARP
+| Service | Internal port | Egress |
+| --- | ---: | --- |
+| Shadowsocks direct | 9000 | VPS |
+| Shadowsocks WARP | 9001 | Cloudflare WARP |
+| GOST direct | 9002 | VPS |
+| GOST WARP | 9003 | Cloudflare WARP proxy |
 
-The repository combines the histories and functionality of `ss_deploy` and `gost_deploy`. Shared installation, TLS, update, and container management logic lives in one place, while protocol-specific templates remain separate.
+Clients always connect to the public domain on port `443`. The internal ports are only used between Caddy and the proxy containers.
 
 ## Requirements
 
@@ -13,7 +17,7 @@ The repository combines the histories and functionality of `ss_deploy` and `gost
 - root access
 - a domain pointing to the VPS
 - inbound TCP ports 80 and 443
-- `/dev/net/tun` when deploying Shadowsocks with WARP
+- `/dev/net/tun` for the Shadowsocks WARP container
 
 ## Install
 
@@ -23,12 +27,15 @@ Run as root on the VPS:
 bash <(curl -fsSL 'https://raw.githubusercontent.com/zmyxpt/proxy_deploy/main/setup.sh')
 ```
 
-The installer first asks which server to deploy:
+The installer asks for:
 
-1. Shadowsocks with `v2ray-plugin`
-2. GOST authenticated SOCKS5 over WebSocket
+- domain and certificate email
+- Shadowsocks direct and WARP WebSocket paths
+- Shadowsocks password
+- GOST direct and WARP WebSocket paths
+- GOST SOCKS5 username and password
 
-It then asks for the domain, certificate email, direct and WARP paths, and protocol credentials. The selected Compose file is written to `docker-compose.yaml`, and generated configuration is stored under `Volumes/`.
+Use four different WebSocket paths, for example `/ss-direct`, `/ss-warp`, `/gost-direct`, and `/gost-warp`.
 
 ## Shadowsocks Client
 
@@ -42,11 +49,11 @@ plugin: v2ray-plugin
 password: your password
 ```
 
-Use the matching WebSocket path for each profile:
+Use the corresponding plugin options:
 
 ```text
-tls;host=www.example.com;path=/direct
-tls;host=www.example.com;path=/warp
+tls;host=www.example.com;path=/ss-direct
+tls;host=www.example.com;path=/ss-warp
 ```
 
 ## GOST Client
@@ -55,24 +62,23 @@ Create both local tunnels with:
 
 ```bash
 gost \
-    -L auto://127.0.0.1:1080 -F 'socks5+wss://user:password@www.example.com:443?path=/direct' \
+    -L auto://127.0.0.1:1080 -F 'socks5+wss://user:password@www.example.com:443?path=/gost-direct' \
     -- \
-    -L auto://127.0.0.1:1081 -F 'socks5+wss://user:password@www.example.com:443?path=/warp'
+    -L auto://127.0.0.1:1081 -F 'socks5+wss://user:password@www.example.com:443?path=/gost-warp'
 ```
 
-## Layout
+## Architecture
 
-- `setup.sh`: unified interactive installer
-- `auto-update.sh`: weekly package and container update task
-- `templates/docker-compose.*.yaml`: protocol-specific service topology
-- `templates/Caddyfile.*`: protocol-specific reverse proxy routes
-- `templates/*.json` and `templates/gost.yaml`: server configuration templates
-- `docker/`: Shadowsocks and protocol-specific WARP images
-- `Volumes/`: generated runtime configuration and persistent state
+Two WARP containers are required because Shadowsocks uses WARP tunnel mode while GOST uses WARP local proxy mode:
 
-## Switching Protocols
+```text
+/ss-direct   -> shadowsocks-direct:9000 -> VPS egress
+/ss-warp     -> warp-shadowsocks:9001   -> WARP tunnel egress
+/gost-direct -> gost:9002               -> VPS egress
+/gost-warp   -> gost:9003 -> warp-gost  -> WARP proxy egress
+```
 
-Back up `Volumes/`, then rerun `setup.sh` and choose the other protocol. The installer replaces `docker-compose.yaml` and the active Caddy configuration. Remove unused protocol directories under `Volumes/` only after confirming the new deployment works.
+Persistent state is separated into `Volumes/warp-shadowsocks` and `Volumes/warp-gost` so each WARP mode keeps its own registration and configuration.
 
 ## Maintenance
 

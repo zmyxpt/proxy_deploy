@@ -13,21 +13,30 @@ __DOMAIN__
         Referrer-Policy no-referrer-when-downgrade
     }
     encode
+
     route * {
-        route /__DIRECT_PATH__ {
+        route /__SS_DIRECT_PATH__ {
             rewrite * /
             reverse_proxy shadowsocks-direct:9000
         }
-        route /__WARP_PATH__ {
+        route /__SS_WARP_PATH__ {
             rewrite * /
-            reverse_proxy warp:9001
+            reverse_proxy warp-shadowsocks:9001
+        }
+        route /__GOST_DIRECT_PATH__ {
+            rewrite * /
+            reverse_proxy gost:9002
+        }
+        route /__GOST_WARP_PATH__ {
+            rewrite * /
+            reverse_proxy gost:9003
         }
         route * {
             header Content-Type text/html
             respond <<HTML
                 <html>
                     <head><title>Welcome</title></head>
-                    <body>Proxy service is running.</body>
+                    <body>Proxy services are running.</body>
                 </html>
             HTML 200
         }

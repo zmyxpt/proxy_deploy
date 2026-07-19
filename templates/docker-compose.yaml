@@ -24,12 +24,12 @@ services:
     networks:
       - proxy
 
-  warp:
-    image: cloudflare-warp
+  warp-shadowsocks:
+    image: cloudflare-warp-shadowsocks
     build:
       context: docker
       dockerfile: warp-shadowsocks.Dockerfile
-    container_name: warp
+    container_name: warp-shadowsocks
     mem_reservation: 128m
     mem_limit: 320m
     cap_add:
@@ -37,7 +37,7 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - ./Volumes/warp:/var/lib/cloudflare-warp
+      - ./Volumes/warp-shadowsocks:/var/lib/cloudflare-warp
     restart: always
     networks:
       - proxy
@@ -48,12 +48,39 @@ services:
       context: docker
       dockerfile: shadowsocks.Dockerfile
     container_name: shadowsocks-warp
-    network_mode: service:warp
+    network_mode: service:warp-shadowsocks
     volumes:
       - ./Volumes/shadowsocks-warp:/etc/shadowsocks-rust
     restart: always
     depends_on:
-      - warp
+      - warp-shadowsocks
+
+  gost:
+    image: gogost/gost
+    container_name: gost
+    entrypoint: ["gost"]
+    command: ["-C", "/etc/gost/gost.yaml"]
+    volumes:
+      - ./Volumes/gost:/etc/gost
+    restart: always
+    networks:
+      - proxy
+    depends_on:
+      - warp-gost
+
+  warp-gost:
+    image: cloudflare-warp-gost
+    build:
+      context: docker
+      dockerfile: warp-gost.Dockerfile
+    container_name: warp-gost
+    mem_reservation: 128m
+    mem_limit: 320m
+    volumes:
+      - ./Volumes/warp-gost:/var/lib/cloudflare-warp
+    restart: always
+    networks:
+      - proxy
 
 networks:
   proxy:
