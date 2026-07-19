@@ -6,6 +6,12 @@ WARP_SVC_PID=$!
 
 until warp-cli --accept-tos status >/dev/null 2>&1
 do
+    if ! kill -0 "$WARP_SVC_PID" 2>/dev/null
+    then
+        echo "warp-svc exited during startup"
+        wait "$WARP_SVC_PID" || true
+        exit 1
+    fi
     sleep 1
 done
 
@@ -17,7 +23,7 @@ fi
 
 warp-cli --accept-tos mode proxy
 warp-cli --accept-tos proxy port 40001
-warp-cli --accept-tos connect
+warp-cli --accept-tos connect || true
 
 socat "TCP-LISTEN:40000,fork,reuseaddr,bind=0.0.0.0" "TCP:127.0.0.1:40001" &
 SOCAT_PID=$!
