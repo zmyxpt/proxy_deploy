@@ -7,7 +7,7 @@ Deploy Shadowsocks and GOST together behind one Caddy HTTPS endpoint. Each proto
 | Shadowsocks direct | 9000 | VPS |
 | Shadowsocks WARP | 9001 | Cloudflare WARP |
 | GOST direct | 9002 | VPS |
-| GOST WARP | 9003 | Cloudflare WARP proxy |
+| GOST WARP | 9003 | Cloudflare WARP tunnel |
 
 Clients always connect to the public domain on port `443`. The internal ports are only used between Caddy and the proxy containers.
 
@@ -17,7 +17,7 @@ Clients always connect to the public domain on port `443`. The internal ports ar
 - root access
 - a domain pointing to the VPS
 - inbound TCP ports 80 and 443
-- `/dev/net/tun` for the Shadowsocks WARP container
+- `/dev/net/tun` for the shared WARP container
 
 ## Install
 
@@ -69,16 +69,16 @@ gost \
 
 ## Architecture
 
-Two WARP containers are required because Shadowsocks uses WARP tunnel mode while GOST uses WARP local proxy mode:
+GOST runs as two containers. `shadowsocks-warp` and `gost-warp` both join the single WARP container's network namespace, so their outbound traffic uses the same WARP tunnel:
 
 ```text
 /ss-direct   -> shadowsocks-direct:9000 -> VPS egress
-/ss-warp     -> warp-shadowsocks:9001   -> WARP tunnel egress
-/gost-direct -> gost:9002               -> VPS egress
-/gost-warp   -> gost:9003 -> warp-gost  -> WARP proxy egress
+/ss-warp     -> warp:9001               -> WARP tunnel egress
+/gost-direct -> gost-direct:9002        -> VPS egress
+/gost-warp   -> warp:9003               -> WARP tunnel egress
 ```
 
-Persistent state is separated into `Volumes/warp-shadowsocks` and `Volumes/warp-gost` so each WARP mode keeps its own registration and configuration.
+The WARP registration and state are stored in `Volumes/warp`.
 
 ## Maintenance
 

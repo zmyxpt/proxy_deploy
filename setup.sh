@@ -81,9 +81,9 @@ configure()
         "$CADDY_DATA_DIR" \
         "${VOLUME_DIR}/shadowsocks-direct" \
         "${VOLUME_DIR}/shadowsocks-warp" \
-        "${VOLUME_DIR}/gost" \
-        "${VOLUME_DIR}/warp-shadowsocks" \
-        "${VOLUME_DIR}/warp-gost"
+        "${VOLUME_DIR}/gost-direct" \
+        "${VOLUME_DIR}/gost-warp" \
+        "${VOLUME_DIR}/warp"
 
     local domain email ss_direct_path ss_warp_path gost_direct_path gost_warp_path
     local ss_password gost_username gost_password confirm
@@ -135,11 +135,12 @@ configure()
     cp "$TEMPLATE_DIR/Caddyfile" "$CADDY_CONF_DIR/Caddyfile"
     cp "$TEMPLATE_DIR/shadowsocks-direct.json" "${VOLUME_DIR}/shadowsocks-direct/config.json"
     cp "$TEMPLATE_DIR/shadowsocks-warp.json" "${VOLUME_DIR}/shadowsocks-warp/config.json"
-    cp "$TEMPLATE_DIR/gost.yaml" "${VOLUME_DIR}/gost/gost.yaml"
+    cp "$TEMPLATE_DIR/gost-direct.yaml" "${VOLUME_DIR}/gost-direct/gost.yaml"
+    cp "$TEMPLATE_DIR/gost-warp.yaml" "${VOLUME_DIR}/gost-warp/gost.yaml"
 
     perl -0pi -e 's/__DOMAIN__/$ENV{DOMAIN}/g; s/__EMAIL__/$ENV{EMAIL}/g; s/__SS_DIRECT_PATH__/$ENV{SS_DIRECT_PATH}/g; s/__SS_WARP_PATH__/$ENV{SS_WARP_PATH}/g; s/__GOST_DIRECT_PATH__/$ENV{GOST_DIRECT_PATH}/g; s/__GOST_WARP_PATH__/$ENV{GOST_WARP_PATH}/g' "$CADDY_CONF_DIR/Caddyfile"
     perl -0pi -e 's/__SS_PASSWORD__/$ENV{SS_PASSWORD}/g' "${VOLUME_DIR}/shadowsocks-direct/config.json" "${VOLUME_DIR}/shadowsocks-warp/config.json"
-    perl -0pi -e 's/__SOCKS_USERNAME__/$ENV{GOST_USERNAME}/g; s/__SOCKS_PASSWORD__/$ENV{GOST_PASSWORD}/g' "${VOLUME_DIR}/gost/gost.yaml"
+    perl -0pi -e 's/__SOCKS_USERNAME__/$ENV{GOST_USERNAME}/g; s/__SOCKS_PASSWORD__/$ENV{GOST_PASSWORD}/g' "${VOLUME_DIR}/gost-direct/gost.yaml" "${VOLUME_DIR}/gost-warp/gost.yaml"
 }
 
 run_server()

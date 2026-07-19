@@ -1,0 +1,12 @@
+services:
+  - name: warp
+    addr: ":9003"
+    handler:
+      type: socks5
+      auth:
+        username: "__SOCKS_USERNAME__"
+        password: "__SOCKS_PASSWORD__"
+    listener:
+      type: ws
+      metadata:
+        ws.path: "/"
