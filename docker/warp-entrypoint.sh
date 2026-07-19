@@ -6,6 +6,12 @@ WARP_SVC_PID=$!
 
 until warp-cli --accept-tos status >/dev/null 2>&1
 do
+    if ! kill -0 "$WARP_SVC_PID" 2>/dev/null
+    then
+        echo "warp-svc exited during startup"
+        wait "$WARP_SVC_PID" || true
+        exit 1
+    fi
     sleep 1
 done
 
@@ -16,7 +22,7 @@ then
 fi
 
 warp-cli --accept-tos mode warp
-warp-cli --accept-tos connect
+warp-cli --accept-tos connect || true
 
 while true
 do
