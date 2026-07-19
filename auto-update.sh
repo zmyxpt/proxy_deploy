@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-set -o errexit -o nounset -o pipefail #-o xtrace
+set -o errexit -o nounset -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
-
-PROJECT_NAME="ss_deploy"
+PROJECT_NAME="proxy_deploy"
 
 cd "$HOME/${PROJECT_NAME}-main"
 

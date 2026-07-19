@@ -1,5 +1,3 @@
-# Default Shadowsocks topology. setup.sh replaces this file with the selected
-# protocol template before starting the stack.
 services:
   caddy:
     image: caddy

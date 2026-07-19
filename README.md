@@ -1,111 +1,79 @@
-# ss_deploy
+# proxy_deploy
 
-Deploy two Shadowsocks-over-WebSocket services behind one HTTPS endpoint:
+Deploy either Shadowsocks or GOST behind a Caddy HTTPS endpoint. Both options provide two WebSocket paths:
 
- - direct profile: exits from the VPS network directly
- - WARP profile: exits through Cloudflare WARP
+- direct: traffic exits from the VPS network
+- WARP: traffic exits through Cloudflare WARP
 
-Both client profiles connect to the same domain and port `443`. Caddy separates them by WebSocket path and forwards traffic to the matching Shadowsocks service.
+The repository combines the histories and functionality of `ss_deploy` and `gost_deploy`. Shared installation, TLS, update, and container management logic lives in one place, while protocol-specific templates remain separate.
 
-Enable bbr if supported.
+## Requirements
 
-# Components
+- Debian 13 (trixie)
+- root access
+- a domain pointing to the VPS
+- inbound TCP ports 80 and 443
+- `/dev/net/tun` when deploying Shadowsocks with WARP
 
- - [Caddy v2](https://caddyserver.com): TLS certificate and WebSocket reverse proxy
- - [shadowsocks-rust](https://github.com/shadowsocks/shadowsocks-rust): Shadowsocks server
- - [v2ray-plugin](https://github.com/shadowsocks/v2ray-plugin): WebSocket transport
- - Cloudflare WARP: WARP egress for the second Shadowsocks service
-
-# Requirements
-
-1. A VPS running debian trixie.
-2. A domain pointing to the VPS public IP.
-3. TCP ports `80` and `443` open on the VPS firewall/security group.
-
-# Install
+## Install
 
 Run as root on the VPS:
 
 ```bash
-bash <(curl -fsSL 'https://raw.githubusercontent.com/zmyxpt/ss_deploy/main/setup.sh')
+bash <(curl -fsSL 'https://raw.githubusercontent.com/zmyxpt/proxy_deploy/main/setup.sh')
 ```
 
-The script asks for:
+The installer first asks which server to deploy:
 
- - domain
- - email for TLS certificate notifications
- - direct Shadowsocks WebSocket path
- - WARP Shadowsocks WebSocket path
- - Shadowsocks password
+1. Shadowsocks with `v2ray-plugin`
+2. GOST authenticated SOCKS5 over WebSocket
 
-Example values:
+It then asks for the domain, certificate email, direct and WARP paths, and protocol credentials. The selected Compose file is written to `docker-compose.yaml`, and generated configuration is stored under `Volumes/`.
 
-```text
-domain: www.example.com
-direct path: /direct
-WARP path: /warp
-password: pass1234
-```
+## Shadowsocks Client
 
-# Client Profiles
-
-Create two Shadowsocks client profiles if you want both exits.
-
-Common settings:
+Create direct and WARP profiles with these common settings:
 
 ```text
 server: www.example.com
 server_port: 443
 method: aes-256-gcm
 plugin: v2ray-plugin
+password: your password
 ```
 
-Direct profile:
+Use the matching WebSocket path for each profile:
 
 ```text
-password: pass1234
-plugin_opts: tls;host=www.example.com;path=/direct
+tls;host=www.example.com;path=/direct
+tls;host=www.example.com;path=/warp
 ```
 
-WARP profile:
+## GOST Client
 
-```text
-password: pass1234
-plugin_opts: tls;host=www.example.com;path=/warp
+Create both local tunnels with:
+
+```bash
+gost \
+    -L auto://127.0.0.1:1080 -F 'socks5+wss://user:password@www.example.com:443?path=/direct' \
+    -- \
+    -L auto://127.0.0.1:1081 -F 'socks5+wss://user:password@www.example.com:443?path=/warp'
 ```
 
-# How It Works
+## Layout
 
-External traffic:
+- `setup.sh`: unified interactive installer
+- `auto-update.sh`: weekly package and container update task
+- `templates/docker-compose.*.yaml`: protocol-specific service topology
+- `templates/Caddyfile.*`: protocol-specific reverse proxy routes
+- `templates/*.json` and `templates/gost.yaml`: server configuration templates
+- `docker/`: Shadowsocks and protocol-specific WARP images
+- `Volumes/`: generated runtime configuration and persistent state
 
-```text
-client -> https://www.example.com:443
-```
+## Switching Protocols
 
-Caddy routes by WebSocket path:
+Back up `Volumes/`, then rerun `setup.sh` and choose the other protocol. The installer replaces `docker-compose.yaml` and the active Caddy configuration. Remove unused protocol directories under `Volumes/` only after confirming the new deployment works.
 
-```text
-/direct -> shadowsocks-direct:9000 -> VPS direct egress
-/warp   -> warp:9001               -> Cloudflare WARP egress
-```
+## Maintenance
 
-# Project Layout
-
- - `setup.sh`: installer and interactive configuration
- - `auto-update.sh`: weekly update task installed by `setup.sh`
- - `docker-compose.yaml`: service topology
- - `docker/`: Dockerfiles and container entrypoints
- - `templates/`: Caddy and Shadowsocks config templates
- - `Volumes/`: generated runtime config and persistent data, created by `setup.sh`
-
-# Container Notes
-
- - Shadowsocks containers use Arch Linux with `shadowsocks-rust`.
- - The WARP container uses Debian stable with Cloudflare's official apt package source.
- - The WARP container stores registration state in `Volumes/warp`, so it should not need to register again after normal restarts.
-
-# Maintenance
-
-The installer adds a weekly cron job that runs `auto-update.sh`. It updates system packages, rebuilds containers, starts the stack again, prunes unused Docker objects, then reboots the VPS.
-
-Generated configuration and persistent state live under `Volumes/`. Back up this directory before reinstalling or moving the deployment.
+The installer creates a weekly cron job for `auto-update.sh`. It updates Debian packages, refreshes and rebuilds containers, prunes unused Docker data, and reboots the VPS. Back up `Volumes/` before reinstalling or moving the deployment.
