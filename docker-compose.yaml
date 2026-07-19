@@ -48,6 +48,7 @@ services:
       context: docker
       dockerfile: shadowsocks.Dockerfile
     container_name: shadowsocks-warp
+    user: "65534:65534"
     network_mode: service:warp
     volumes:
       - ./Volumes/shadowsocks-warp:/etc/shadowsocks-rust
@@ -69,6 +70,7 @@ services:
   gost-warp:
     image: gogost/gost
     container_name: gost-warp
+    user: "65534:65534"
     entrypoint: ["gost"]
     command: ["-C", "/etc/gost/gost.yaml"]
     network_mode: service:warp

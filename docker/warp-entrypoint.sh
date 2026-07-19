@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 set -o errexit -o nounset -o pipefail
 
+PROXY_UID=65534
+
+iptables -C OUTPUT -m owner --uid-owner "$PROXY_UID" -o eth0 -j REJECT 2>/dev/null || \
+    iptables -I OUTPUT 1 -m owner --uid-owner "$PROXY_UID" -o eth0 -j REJECT
+
+if ip6tables -L OUTPUT >/dev/null 2>&1
+then
+    ip6tables -C OUTPUT -m owner --uid-owner "$PROXY_UID" -o eth0 -j REJECT 2>/dev/null || \
+        ip6tables -I OUTPUT 1 -m owner --uid-owner "$PROXY_UID" -o eth0 -j REJECT
+fi
+
 warp-svc &
 WARP_SVC_PID=$!
 
