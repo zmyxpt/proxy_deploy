@@ -87,33 +87,24 @@ configure()
         "${VOLUME_DIR}/warp"
 
     local domain email ss_direct_path ss_warp_path gost_direct_path gost_warp_path
-    local ss_password gost_username gost_password confirm
+    local ss_password gost_username gost_password choice
+
+    read -r -p $'Set your domain, e.g. \033[1mwww.example.com\033[0m\n' domain
+    read -r -p $'Set your email for TLS certificate notices, e.g. \033[1mabc@gmail.com\033[0m\n' email
+    read -r -p $'Set the Shadowsocks direct path, e.g. \033[1m/ss-direct\033[0m\n' ss_direct_path
+    read -r -p $'Set the Shadowsocks WARP path, e.g. \033[1m/ss-warp\033[0m\n' ss_warp_path
+    read -r -p $'Set the Shadowsocks password, e.g. \033[1mpass1234\033[0m\n' ss_password
+    read -r -p $'Set the GOST direct path, e.g. \033[1m/gost-direct\033[0m\n' gost_direct_path
+    read -r -p $'Set the GOST WARP path, e.g. \033[1m/gost-warp\033[0m\n' gost_warp_path
+    read -r -p $'Set the GOST SOCKS5 username, e.g. \033[1muser1234\033[0m\n' gost_username
+    read -r -p $'Set the GOST SOCKS5 password, e.g. \033[1mpass1234\033[0m\n' gost_password
+
     while true
     do
-        read -r -p $'Set your domain, e.g. \033[1mwww.example.com\033[0m\n' domain
-        read -r -p $'Set your email for TLS certificate notices, e.g. \033[1mabc@gmail.com\033[0m\n' email
-        read -r -p $'Set the Shadowsocks direct path, e.g. \033[1m/ss-direct\033[0m\n' ss_direct_path
-        read -r -p $'Set the Shadowsocks WARP path, e.g. \033[1m/ss-warp\033[0m\n' ss_warp_path
-        read -r -p $'Set the Shadowsocks password, e.g. \033[1mpass1234\033[0m\n' ss_password
-        read -r -p $'Set the GOST direct path, e.g. \033[1m/gost-direct\033[0m\n' gost_direct_path
-        read -r -p $'Set the GOST WARP path, e.g. \033[1m/gost-warp\033[0m\n' gost_warp_path
-        read -r -p $'Set the GOST SOCKS5 username, e.g. \033[1muser1234\033[0m\n' gost_username
-        read -r -p $'Set the GOST SOCKS5 password, e.g. \033[1mpass1234\033[0m\n' gost_password
-
         ss_direct_path="${ss_direct_path#/}"
         ss_warp_path="${ss_warp_path#/}"
         gost_direct_path="${gost_direct_path#/}"
         gost_warp_path="${gost_warp_path#/}"
-        if [[ -z "$ss_direct_path" || -z "$ss_warp_path" || -z "$gost_direct_path" || -z "$gost_warp_path" ]]
-        then
-            echo -e "\033[31mWebSocket paths cannot be empty.\033[0m"
-            continue
-        fi
-        if printf '%s\n' "$ss_direct_path" "$ss_warp_path" "$gost_direct_path" "$gost_warp_path" | sort | uniq -d | grep -q .
-        then
-            echo -e "\033[31mAll four WebSocket paths must be different.\033[0m"
-            continue
-        fi
 
         echo $'Here is your setting:\n=============================='
         echo -e "Domain: \033[32m${domain}\033[0m"
@@ -125,8 +116,69 @@ configure()
         echo -e "GOST WARP: \033[32m/${gost_warp_path}\033[0m -> 9003"
         echo -e "GOST username: \033[32m${gost_username}\033[0m"
         echo -e "GOST password: \033[32m${gost_password}\033[0m"
-        read -r -p $'Continue? [y/N]\n' confirm
-        [[ "$confirm" =~ ^[Yy]$ ]] && break
+
+        echo $'=============================='
+        echo "1. Change domain"
+        echo "2. Change email"
+        echo "3. Change Shadowsocks direct path"
+        echo "4. Change Shadowsocks WARP path"
+        echo "5. Change Shadowsocks password"
+        echo "6. Change GOST direct path"
+        echo "7. Change GOST WARP path"
+        echo "8. Change GOST username"
+        echo "9. Change GOST password"
+        echo "0. Confirm and start deployment"
+
+        read -r -p $'Choose an option:\n' choice
+
+        case "$choice" in
+        1)
+            read -r -p $'Set your domain:\n' domain
+            ;;
+        2)
+            read -r -p $'Set your email:\n' email
+            ;;
+        3)
+            read -r -p $'Set the Shadowsocks direct path:\n' ss_direct_path
+            ;;
+        4)
+            read -r -p $'Set the Shadowsocks WARP path:\n' ss_warp_path
+            ;;
+        5)
+            read -r -p $'Set the Shadowsocks password:\n' ss_password
+            ;;
+        6)
+            read -r -p $'Set the GOST direct path:\n' gost_direct_path
+            ;;
+        7)
+            read -r -p $'Set the GOST WARP path:\n' gost_warp_path
+            ;;
+        8)
+            read -r -p $'Set the GOST username:\n' gost_username
+            ;;
+        9)
+            read -r -p $'Set the GOST password:\n' gost_password
+            ;;
+        0)
+            if [[ -z "$ss_direct_path" || -z "$ss_warp_path" ||
+                  -z "$gost_direct_path" || -z "$gost_warp_path" ]]
+            then
+                echo -e "\033[31mWebSocket paths cannot be empty.\033[0m"
+                continue
+            fi
+
+            if printf '%s\n' "$ss_direct_path" "$ss_warp_path" \
+                "$gost_direct_path" "$gost_warp_path" |
+                sort | uniq -d | grep -q .
+            then
+                echo -e "\033[31mAll four WebSocket paths must be different.\033[0m"
+                continue
+            fi
+
+            break
+            ;;
+        *) ;;
+        esac
     done
 
     export DOMAIN="$domain" EMAIL="$email"
