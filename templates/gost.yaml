@@ -7,6 +7,7 @@ services:
         username: "__SOCKS_USERNAME__"
         password: "__SOCKS_PASSWORD__"
     listener:
+      metadata.path: "/"
       type: ws
 
   - name: warp
@@ -18,6 +19,7 @@ services:
         username: "__SOCKS_USERNAME__"
         password: "__SOCKS_PASSWORD__"
     listener:
+      metadata.path: "/"
       type: ws
 
 chains:
