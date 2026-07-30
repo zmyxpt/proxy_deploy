@@ -1,0 +1,12 @@
+services:
+  - name: "__SERVICE_NAME__"
+    addr: "0.0.0.0:__SERVER_PORT__"
+    handler:
+      type: socks5
+      auth:
+        username: gost
+        password: "__PASSWORD__"
+    listener:
+      type: ws
+      metadata:
+        path: /ws

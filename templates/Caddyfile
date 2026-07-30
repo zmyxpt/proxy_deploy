@@ -1,0 +1,57 @@
+"__DOMAIN__"
+{
+    tls "__EMAIL__" {
+        protocols "tls1.3"
+    }
+    log {
+        output file "/var/log/caddy/access.log"
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer-when-downgrade"
+    }
+    encode
+
+    route * {
+        route "/__SS_DIRECT_PATH__" {
+            rewrite * "/ws"
+            reverse_proxy "ss_direct:9000"
+        }
+        route "/__SS_WARP_PATH__" {
+            rewrite * "/ws"
+            reverse_proxy "warp:9001"
+        }
+        route "/__GOST_DIRECT_PATH__" {
+            rewrite * "/ws"
+            reverse_proxy "gost_direct:9002"
+        }
+        route "/__GOST_WARP_PATH__" {
+            rewrite * "/ws"
+            reverse_proxy "warp:9003"
+        }
+        route * {
+            header Content-Type "text/html"
+            respond <<HTML
+                <html>
+                    <head>
+                        <title>Welcome</title>
+                        <style>
+                            body {
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                height: 100vh;
+                                margin: 0;
+                                font-size: 60px;
+                                text-align: center;
+                            }
+                        </style>
+                    </head>
+                    <body>May the Force be<br>with you</body>
+                </html>
+            HTML 200
+        }
+    }
+}

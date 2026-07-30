@@ -1,0 +1,79 @@
+services:
+  caddy:
+    image: caddy
+    container_name: caddy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./volumes/caddy-conf:/etc/caddy
+      - ./volumes/caddy-data:/data
+    restart: always
+    networks:
+      - proxy
+
+  warp:
+    build:
+      context: docker
+      dockerfile: warp.Dockerfile
+    container_name: warp
+    mem_reservation: 128m
+    mem_limit: 256m
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./volumes/cloudflare-warp:/var/lib/cloudflare-warp
+    restart: always
+    networks:
+      - proxy
+
+  ss_direct:
+    build:
+      context: docker
+      dockerfile: shadowsocks.Dockerfile
+    container_name: ss_direct
+    volumes:
+      - ./volumes/shadowsocks-direct:/etc/shadowsocks-rust
+    restart: always
+    networks:
+      - proxy
+
+  ss_warp:
+    build:
+      context: docker
+      dockerfile: shadowsocks.Dockerfile
+    container_name: ss_warp
+    network_mode: service:warp
+    volumes:
+      - ./volumes/shadowsocks-warp:/etc/shadowsocks-rust
+    restart: always
+    depends_on:
+      - warp
+
+  gost_direct:
+    image: gogost/gost
+    container_name: gost_direct
+    entrypoint: ["gost"]
+    command: ["-C", "/etc/gost/gost.yaml"]
+    volumes:
+      - ./volumes/gost-direct:/etc/gost
+    restart: always
+    networks:
+      - proxy
+
+  gost_warp:
+    image: gogost/gost
+    container_name: gost_warp
+    entrypoint: ["gost"]
+    command: ["-C", "/etc/gost/gost.yaml"]
+    network_mode: service:warp
+    volumes:
+      - ./volumes/gost-warp:/etc/gost
+    restart: always
+    depends_on:
+      - warp
+
+networks:
+  proxy:

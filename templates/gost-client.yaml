@@ -1,0 +1,43 @@
+services:
+  - name: direct
+    addr: 127.0.0.1:1082
+    handler:
+      type: auto
+      chain: direct
+    listener:
+      type: tcp
+  - name: warp
+    addr: 127.0.0.1:1083
+    handler:
+      type: auto
+      chain: warp
+    listener:
+      type: tcp
+
+chains:
+  - name: direct
+    hops:
+      - nodes:
+          - addr: "__DOMAIN__:443"
+            connector:
+              type: socks5
+              auth:
+                username: gost
+                password: "__PASSWORD__"
+            dialer:
+              type: wss
+              metadata:
+                path: "/__GOST_DIRECT_PATH__"
+  - name: warp
+    hops:
+      - nodes:
+          - addr: "__DOMAIN__:443"
+            connector:
+              type: socks5
+              auth:
+                username: gost
+                password: "__PASSWORD__"
+            dialer:
+              type: wss
+              metadata:
+                path: "/__GOST_WARP_PATH__"
