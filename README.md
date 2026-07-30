@@ -19,12 +19,14 @@ flowchart LR
     subgraph CLIENT["Proxy client"]
         SSCLIENT["shadowsocks-rust<br/>+ v2ray-plugin"]
         GOSTCLIENT["GOST"]
+        CLIENTOUT((" "))
+
+        SSCLIENT ~~~ CLIENTOUT
+        GOSTCLIENT ~~~ CLIENTOUT
     end
 
-    DOMAIN["**www.example.com:443**<br/>HTTPS request<br/>WebSocket Upgrade<br/>WSS tunnel"]
-
     subgraph DOCKER["VPS Docker containers"]
-        CADDY["caddy<br/>:443"]
+        CADDY["caddy<br/>www.example.com:443"]
         SSDIRECT["ss_direct<br/>:9000"]
         GOSTDIRECT["gost_direct<br/>:9002"]
 
@@ -40,9 +42,7 @@ flowchart LR
 
     SOFTWARE --> SSCLIENT
     SOFTWARE --> GOSTCLIENT
-    SSCLIENT --> DOMAIN
-    GOSTCLIENT --> DOMAIN
-    DOMAIN --> CADDY
+    CLIENTOUT -. HTTPS request<br/>WebSocket Upgrade<br/>WSS tunnel .-> CADDY
 
     CADDY -->|/SS_DIRECT_PATH| SSDIRECT
     CADDY -->|/SS_WARP_PATH| SSWARP
@@ -55,6 +55,8 @@ flowchart LR
     GOSTWARP -. network_mode: service:warp .-> WARP
     WARP --> CLOUDFLARE
     CLOUDFLARE --> TARGET
+
+    style CLIENTOUT fill:none,stroke:none
 ```
 
 ## Install
