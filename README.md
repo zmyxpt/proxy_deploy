@@ -61,7 +61,11 @@ flowchart LR
 
 Requirements:
 
-- A VPS (KVM not openVZ, Debian 13 trixie, Root, Public IP, Ports 80/443 Open)
+- A VPS
+  - `/dev/net/tun` available (KVM recommended; OpenVZ/LXC may not supported)
+  - Public IP and Port 80/443
+  - Debian 13 (trixie)
+  - Root access
 - A domain pointing to the VPS, for example `www.example.com`
 
 Run as root on the VPS:
