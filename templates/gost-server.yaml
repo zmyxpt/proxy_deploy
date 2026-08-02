@@ -1,12 +1,20 @@
 services:
-  - name: "__SERVICE_NAME__"
-    addr: "0.0.0.0:__SERVER_PORT__"
+  - addr: "0.0.0.0:__SERVER_PORT__"
+    resolver: cloudflare
     handler:
-      type: socks5
+      type: relay
       auth:
         username: gost
         password: "__PASSWORD__"
+      metadata:
+        nodelay: true
     listener:
       type: ws
       metadata:
         path: /ws
+
+resolvers:
+  - name: cloudflare
+    nameservers:
+      - addr: udp://1.1.1.1:53
+      - addr: udp://1.0.0.1:53

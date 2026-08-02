@@ -15,6 +15,4 @@ RUN cd /tmp && \
     mv ./v2ray* /usr/bin/v2ray-plugin && \
     chmod +x /usr/bin/v2ray-plugin
 
-USER nobody
-
 CMD ["ssserver", "--log-without-time", "-c", "/etc/shadowsocks-rust/config.json"]

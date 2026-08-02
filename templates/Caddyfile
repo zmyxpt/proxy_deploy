@@ -17,19 +17,19 @@
     route * {
         route "/__SS_DIRECT_PATH__" {
             rewrite * "/ws"
-            reverse_proxy "ss_direct:9000"
+            reverse_proxy "ss_direct:__SS_DIRECT_PORT__"
         }
         route "/__SS_WARP_PATH__" {
             rewrite * "/ws"
-            reverse_proxy "warp:9001"
+            reverse_proxy "warp:__SS_WARP_PORT__"
         }
         route "/__GOST_DIRECT_PATH__" {
             rewrite * "/ws"
-            reverse_proxy "gost_direct:9002"
+            reverse_proxy "gost_direct:__GOST_DIRECT_PORT__"
         }
         route "/__GOST_WARP_PATH__" {
             rewrite * "/ws"
-            reverse_proxy "warp:9003"
+            reverse_proxy "warp:__GOST_WARP_PORT__"
         }
         route * {
             header Content-Type "text/html"

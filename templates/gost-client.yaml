@@ -1,13 +1,13 @@
 services:
   - name: direct
-    addr: 127.0.0.1:1082
+    addr: 127.0.0.1:__GOST_DIRECT_PORT__
     handler:
       type: auto
       chain: direct
     listener:
       type: tcp
   - name: warp
-    addr: 127.0.0.1:1083
+    addr: 127.0.0.1:__GOST_WARP_PORT__
     handler:
       type: auto
       chain: warp
@@ -20,24 +20,38 @@ chains:
       - nodes:
           - addr: "__DOMAIN__:443"
             connector:
-              type: socks5
+              type: relay
               auth:
                 username: gost
                 password: "__PASSWORD__"
+              metadata:
+                nodelay: true
             dialer:
               type: wss
+              tls:
+                secure: true
               metadata:
                 path: "/__GOST_DIRECT_PATH__"
+                handshakeTimeout: 10s
+                keepAlive: true
+                ttl: 30s
   - name: warp
     hops:
       - nodes:
           - addr: "__DOMAIN__:443"
             connector:
-              type: socks5
+              type: relay
               auth:
                 username: gost
                 password: "__PASSWORD__"
+              metadata:
+                nodelay: true
             dialer:
               type: wss
+              tls:
+                secure: true
               metadata:
                 path: "/__GOST_WARP_PATH__"
+                handshakeTimeout: 10s
+                keepAlive: true
+                ttl: 30s

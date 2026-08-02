@@ -18,6 +18,6 @@
   "mode": "tcp_only",
   "timeout": 120,
   "fast_open": false,
-  "no_delay": false,
+  "no_delay": true,
   "ipv6_first": false
 }

@@ -8,7 +8,7 @@ RUN set -evx && \
     curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" >/etc/apt/sources.list.d/cloudflare-client.list && \
     apt-get update && \
-    apt-get install -y --no-install-recommends cloudflare-warp && \
+    apt-get install -y --no-install-recommends cloudflare-warp iproute2 iptables && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

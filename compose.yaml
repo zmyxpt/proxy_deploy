@@ -1,13 +1,12 @@
 services:
   caddy:
-    image: caddy
-    container_name: caddy
+    image: caddy:2
     ports:
       - 80:80
       - 443:443
     volumes:
-      - ./volumes/caddy-conf:/etc/caddy
-      - ./volumes/caddy-data:/data
+      - ./data/caddy-conf:/etc/caddy
+      - ./data/caddy-data:/data
     restart: always
     networks:
       - proxy
@@ -16,7 +15,6 @@ services:
     build:
       context: docker
       dockerfile: warp.Dockerfile
-    container_name: warp
     mem_reservation: 128m
     mem_limit: 256m
     cap_add:
@@ -24,7 +22,7 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - ./volumes/cloudflare-warp:/var/lib/cloudflare-warp
+      - ./data/cloudflare-warp:/var/lib/cloudflare-warp
     restart: always
     networks:
       - proxy
@@ -33,9 +31,9 @@ services:
     build:
       context: docker
       dockerfile: shadowsocks.Dockerfile
-    container_name: ss_direct
+    user: "65534:65534"
     volumes:
-      - ./volumes/shadowsocks-direct:/etc/shadowsocks-rust
+      - ./data/shadowsocks-direct:/etc/shadowsocks-rust
     restart: always
     networks:
       - proxy
@@ -44,33 +42,33 @@ services:
     build:
       context: docker
       dockerfile: shadowsocks.Dockerfile
-    container_name: ss_warp
+    user: "65534:65534"
     network_mode: service:warp
     volumes:
-      - ./volumes/shadowsocks-warp:/etc/shadowsocks-rust
+      - ./data/shadowsocks-warp:/etc/shadowsocks-rust
     restart: always
     depends_on:
       - warp
 
   gost_direct:
-    image: gogost/gost
-    container_name: gost_direct
+    image: gogost/gost:3
+    user: "65534:65534"
     entrypoint: ["gost"]
     command: ["-C", "/etc/gost/gost.yaml"]
     volumes:
-      - ./volumes/gost-direct:/etc/gost
+      - ./data/gost-direct:/etc/gost
     restart: always
     networks:
       - proxy
 
   gost_warp:
-    image: gogost/gost
-    container_name: gost_warp
+    image: gogost/gost:3
+    user: "65534:65534"
     entrypoint: ["gost"]
     command: ["-C", "/etc/gost/gost.yaml"]
     network_mode: service:warp
     volumes:
-      - ./volumes/gost-warp:/etc/gost
+      - ./data/gost-warp:/etc/gost
     restart: always
     depends_on:
       - warp
