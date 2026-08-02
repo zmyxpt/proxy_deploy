@@ -1,5 +1,6 @@
 services:
-  - addr: "0.0.0.0:__SERVER_PORT__"
+  - name: __SERVICE_NAME__
+    addr: "0.0.0.0:__SERVER_PORT__"
     resolver: cloudflare
     handler:
       type: relay

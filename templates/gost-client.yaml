@@ -1,24 +1,26 @@
 services:
-  - name: direct
+  - name: gost_direct
     addr: 127.0.0.1:__GOST_DIRECT_PORT__
     handler:
       type: auto
-      chain: direct
+      chain: gost_direct
     listener:
       type: tcp
-  - name: warp
+  - name: gost_warp
     addr: 127.0.0.1:__GOST_WARP_PORT__
     handler:
       type: auto
-      chain: warp
+      chain: gost_warp
     listener:
       type: tcp
 
 chains:
-  - name: direct
+  - name: gost_direct
     hops:
-      - nodes:
-          - addr: "__DOMAIN__:443"
+      - name: gost_direct
+        nodes:
+          - name: gost_direct
+            addr: "__DOMAIN__:443"
             connector:
               type: relay
               auth:
@@ -35,10 +37,12 @@ chains:
                 handshakeTimeout: 10s
                 keepAlive: true
                 ttl: 30s
-  - name: warp
+  - name: gost_warp
     hops:
-      - nodes:
-          - addr: "__DOMAIN__:443"
+      - name: gost_warp
+        nodes:
+          - name: gost_warp
+            addr: "__DOMAIN__:443"
             connector:
               type: relay
               auth:
