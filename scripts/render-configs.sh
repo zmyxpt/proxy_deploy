@@ -33,27 +33,24 @@ do
     fi
 done
 
+declare -A seen_ports=()
 for variable in SS_DIRECT_PORT SS_WARP_PORT GOST_DIRECT_PORT GOST_WARP_PORT
 do
     value="${!variable}"
-    if [[ ! "$value" =~ ^[0-9]+$ ]] || (( 10#$value < 1 || 10#$value > 65535 ))
+    if [[ ! "$value" =~ ^[1-9][0-9]*$ ]] ||
+        (( 10#$value < 1024 || 10#$value > 65535 ))
     then
-        echo "Invalid port: ${variable}=${value}"
+        echo "Invalid port: ${variable}=${value}; expected 1024-65535."
         exit 23
     fi
+
+    if [[ -n "${seen_ports[$value]:-}" ]]
+    then
+        echo "Duplicate port: ${seen_ports[$value]} and ${variable} both use ${value}."
+        exit 24
+    fi
+    seen_ports[$value]="$variable"
 done
-
-if [[ "$SS_WARP_PORT" == "$GOST_WARP_PORT" ]]
-then
-    echo "SS_WARP_PORT and GOST_WARP_PORT must be different."
-    exit 24
-fi
-
-if [[ "$GOST_DIRECT_PORT" == "$GOST_WARP_PORT" ]]
-then
-    echo "GOST_DIRECT_PORT and GOST_WARP_PORT must be different."
-    exit 25
-fi
 
 if [[ ! "$DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$ || "$DOMAIN" == *..* ]]
 then
