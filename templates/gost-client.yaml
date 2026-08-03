@@ -32,7 +32,9 @@ chains:
               type: wss
               tls:
                 secure: true
+                serverName: "_DOMAIN__"
               metadata:
+                host: "_DOMAIN__"
                 path: "/__GOST_DIRECT_PATH__"
                 handshakeTimeout: 10s
                 keepAlive: true
@@ -54,7 +56,9 @@ chains:
               type: wss
               tls:
                 secure: true
+                serverName: "_DOMAIN__"
               metadata:
+                host: "_DOMAIN__"
                 path: "/__GOST_WARP_PATH__"
                 handshakeTimeout: 10s
                 keepAlive: true
