@@ -52,6 +52,8 @@ services:
 
   gost_direct:
     image: gogost/gost:3
+    mem_reservation: 64m
+    mem_limit: 128m
     user: "65534:65534"
     entrypoint: ["gost"]
     command: ["-C", "/etc/gost/gost.yaml"]
@@ -63,6 +65,8 @@ services:
 
   gost_warp:
     image: gogost/gost:3
+    mem_reservation: 64m
+    mem_limit: 128m
     user: "65534:65534"
     entrypoint: ["gost"]
     command: ["-C", "/etc/gost/gost.yaml"]

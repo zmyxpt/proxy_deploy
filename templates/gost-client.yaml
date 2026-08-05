@@ -26,8 +26,6 @@ chains:
               auth:
                 username: gost
                 password: "__PASSWORD__"
-              metadata:
-                nodelay: true
             dialer:
               type: wss
               tls:
@@ -50,8 +48,6 @@ chains:
               auth:
                 username: gost
                 password: "__PASSWORD__"
-              metadata:
-                nodelay: true
             dialer:
               type: wss
               tls:

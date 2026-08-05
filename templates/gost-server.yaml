@@ -7,8 +7,6 @@ services:
       auth:
         username: gost
         password: "__PASSWORD__"
-      metadata:
-        nodelay: true
     listener:
       type: ws
       metadata:
@@ -17,5 +15,4 @@ services:
 resolvers:
   - name: cloudflare
     nameservers:
-      - addr: udp://1.1.1.1:53
-      - addr: udp://1.0.0.1:53
+      - addr: tcp://1.1.1.1:53
