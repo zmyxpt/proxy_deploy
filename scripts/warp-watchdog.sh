@@ -30,8 +30,8 @@ repair_warp_dependents()
     local warp_ns ss_warp_ns gost_warp_ns
 
     warp_ns="$(network_namespace warp)" || return 0
-    ss_warp_ns="$(network_namespace ss_warp)" || return 0
-    gost_warp_ns="$(network_namespace gost_warp)" || return 0
+    ss_warp_ns="$(network_namespace ss_warp 2>/dev/null || true)"
+    gost_warp_ns="$(network_namespace gost_warp 2>/dev/null || true)"
 
     if [[ "$warp_ns" != "$ss_warp_ns" ||
           "$warp_ns" != "$gost_warp_ns" ]]
