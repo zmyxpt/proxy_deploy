@@ -1,0 +1,13 @@
+[Unit]
+Description=Repair WARP proxy services after WARP restarts
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+ExecStart=/root/proxy_deploy-main/scripts/warp-watchdog.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

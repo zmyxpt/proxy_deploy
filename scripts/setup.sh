@@ -178,6 +178,15 @@ EOF
     chmod 0644 /etc/cron.d/proxy_deploy_update
 }
 
+install_warp_watchdog()
+{
+    install -o root -g root -m 0644 \
+        "$PROJECT_DIR/systemd/proxy-deploy-warp-watchdog.service" \
+        /etc/systemd/system/proxy-deploy-warp-watchdog.service
+    systemctl daemon-reload
+    systemctl enable --now proxy-deploy-warp-watchdog.service
+}
+
 print_completion_message()
 {
     echo
@@ -200,6 +209,7 @@ main()
     bash "$PROJECT_DIR/scripts/render-configs.sh"
     deploy_services
     install_update_cron
+    install_warp_watchdog
     print_completion_message
 }
 

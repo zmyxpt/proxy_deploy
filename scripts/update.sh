@@ -48,6 +48,13 @@ docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" build --no-cache --pull || 
 docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" down --remove-orphans
 docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" up -d
 
+install -o root -g root -m 0644 \
+    "$PROJECT_DIR/systemd/proxy-deploy-warp-watchdog.service" \
+    /etc/systemd/system/proxy-deploy-warp-watchdog.service
+systemctl daemon-reload
+systemctl enable proxy-deploy-warp-watchdog.service
+systemctl restart proxy-deploy-warp-watchdog.service
+
 docker builder prune -af
 docker system prune -af
 docker volume prune -f
